@@ -1,12 +1,29 @@
 import asyncio
 from playwright.async_api import async_playwright
 import psycopg2
+import requests
 
+TOKEN = "7416958256:AAGxXCgIh7Zp6Bd4g3QUkcHcaFklWV1UBhg"
+CHAT_ID = 1043507721
 IP = '109.172.115.223'
 PORT = '5432'
+
 USERNAME = 'postgres'
-PASSWORD = 2556505535
+PASSWORD = '2556505535'
 DBNAME = 'artists'
+
+URL = 'https://api.telegram.org/bot' + TOKEN + '/sendMessage'
+
+class Telegram:
+    @classmethod
+    def send(cls, message):
+        payload = {
+            'chat_id': CHAT_ID,
+            'text': message,
+            'parse_mode': 'HTML',
+        }
+        response = requests.post(URL, data=payload)
+        return response
 
 class DB:
     def __init__(self) -> None:
@@ -26,23 +43,27 @@ async def get_button(page, url):
     }''')
     return btn
 
-async def main(url):
+async def main(url, id):
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        page = await browser.new_page()
-        button_exists = await get_button(url=url, page=page)
-        
-        if button_exists is True:
-            await DB().insert(table_name='data', values=(url))
-            print(True)
+        try:
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
+            button_exists = await get_button(url=url, page=page)
+            
+            if button_exists:
+                await DB().insert(table_name='data', values=url)
+                print(f"ID {id}: Button exists")
+            else:
+                print(f"ID {id}: Button does not exist")
 
-        await browser.close()
+            await browser.close()
+        except Exception as e:
+            error_message = f"Error for ID {id}: {str(e)}"
+            Telegram.send(error_message)
+            print(error_message)
 
-for i in range(1, 1000000000):
+for i in range(6206, 1000000000):
     id = f'{i:09d}'
-    asyncio.run(main(url=f"https://vk.com/public{id}"))
-
-
-
-
-
+    print(f"Processing ID: {id}")
+    Telegram.send(f"Processing ID: {id}")
+    asyncio.run(main(url=f"https://vk.com/public{id}", id=id))
