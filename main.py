@@ -62,7 +62,7 @@ async def main(url, id):
             Telegram.send(error_message)
             print(error_message)
 
-for i in range(6206, 1000000000):
+for i in range(12852, 1000000000):
     id = f'{i:09d}'
     print(f"Processing ID: {id}")
     Telegram.send(f"Processing ID: {id}")
